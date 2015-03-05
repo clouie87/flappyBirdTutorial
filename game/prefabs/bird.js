@@ -19,19 +19,34 @@ var Bird = function(game, x, y, frame) {
   //THIS IS SO COOL!!!! (or when you go home this.code was so cool!!
 
 
-
-
   // initialize your prefab here
 
 };
+
+
 
 Bird.prototype = Object.create(Phaser.Sprite.prototype);
 Bird.prototype.constructor = Bird;
 
 Bird.prototype.update = function() {
 
+  //check to see if our angle is less than 90
+  //if it is rotate the bird towards the ground by 2.5 degrees
+  if(this.angle < 90) {
+    this.angle += 2.5;
+
+  }
+
   // write your prefab's specific update code here
 
+
+};
+Bird.prototype.flap = function(){
+  //have the bird jump
+  this.body.velocity.y = -400;
+
+  //rotate the bird up 40 degrees when its jumping
+  this.game.add.tween(this).to({angle: -40}, 100).start();
 };
 
 module.exports = Bird;

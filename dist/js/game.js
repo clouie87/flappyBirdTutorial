@@ -15,7 +15,7 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":4,"./states/gameover":5,"./states/menu":6,"./states/play":7,"./states/preload":8}],2:[function(require,module,exports){
+},{"./states/boot":6,"./states/gameover":7,"./states/menu":8,"./states/play":9,"./states/preload":10}],2:[function(require,module,exports){
 'use strict';
 
 var Bird = function(game, x, y, frame) {
@@ -37,19 +37,34 @@ var Bird = function(game, x, y, frame) {
   //THIS IS SO COOL!!!! (or when you go home this.code was so cool!!
 
 
-
-
   // initialize your prefab here
 
 };
+
+
 
 Bird.prototype = Object.create(Phaser.Sprite.prototype);
 Bird.prototype.constructor = Bird;
 
 Bird.prototype.update = function() {
 
+  //check to see if our angle is less than 90
+  //if it is rotate the bird towards the ground by 2.5 degrees
+  if(this.angle < 90) {
+    this.angle += 2.5;
+
+  }
+
   // write your prefab's specific update code here
 
+
+};
+Bird.prototype.flap = function(){
+  //have the bird jump
+  this.body.velocity.y = -400;
+
+  //rotate the bird up 40 degrees when its jumping
+  this.game.add.tween(this).to({angle: -40}, 100).start();
 };
 
 module.exports = Bird;
@@ -85,6 +100,64 @@ Ground.prototype.update = function() {
 module.exports = Ground;
 
 },{}],4:[function(require,module,exports){
+'use strict';
+
+var Pipe = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'pipe', frame);
+  this.anchor.setTo(0.5, 0.5);
+  this.game.physics.arcade.enableBody(this);
+
+  this.body.allowGravity = false;
+  this.body.immovable = true;
+
+  this.body.velocity.x = -200;
+
+
+  // initialize your prefab here
+
+};
+
+Pipe.prototype = Object.create(Phaser.Sprite.prototype);
+Pipe.prototype.constructor = Pipe;
+
+Pipe.prototype.update = function() {
+
+  // write your prefab's specific update code here
+
+};
+
+module.exports = Pipe;
+
+},{}],5:[function(require,module,exports){
+'use strict';
+
+var Pipe = require('./pipe');
+
+var PipeGroup = function(game, parent) {
+  Phaser.Group.call(this, game, parent);
+
+  this.topPipe = new Pipe(this.game, 0,0,0);
+  this.add(this.topPipe);
+  // initialize your prefab here
+  this.bottomPipe = new Pipe(this.game, 0, 440, 1);
+  this.add(this.bottomPipe);
+
+  this.hasScored=false;
+
+};
+
+PipeGroup.prototype = Object.create(Phaser.Group.prototype);
+PipeGroup.prototype.constructor = PipeGroup;
+
+PipeGroup.prototype.update = function() {
+
+  // write your prefab's specific update code here
+
+};
+
+module.exports = PipeGroup;
+
+},{"./pipe":4}],6:[function(require,module,exports){
 
 'use strict';
 
@@ -103,7 +176,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 
 'use strict';
 function GameOver() {}
@@ -131,7 +204,7 @@ GameOver.prototype = {
 };
 module.exports = GameOver;
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 
 'use strict';
 function Menu() {}
@@ -188,12 +261,14 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 
   'use strict';
 
   var Bird = require('../prefabs/bird');
   var Ground = require('../prefabs/ground');
+  var PipeGroup = require('../prefabs/pipeGroup');
+  var Pipe = require('../prefabs/pipe');
 
   function Play() {}
   Play.prototype = {
@@ -201,7 +276,7 @@ module.exports = Menu;
 
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
       //initiates the physics sysytem in our game
-      this.game.physics.arcade.gravity.y = 500;
+      this.game.physics.arcade.gravity.y = 1200;
       // set the gravity to be max rate of 500px/sec
 
       ////////////////////ADD BACKGROUND //////////////////////
@@ -218,10 +293,41 @@ module.exports = Menu;
       this.ground = new Ground(this.game, 0, 400, 335, 112);
       this.game.add.existing(this.ground);
 
+      ////////////////// CREATE THE FLAPPING ///////////////////
+      //keep the spacebar from propogating up to the browser
+      //by default our spacebar scrolls the page down. we want to override this
+      this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
+
+      //add keyboard controls
+      var flapKey = this.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+      flapKey.onDown.add(this.bird.flap, this.bird);
+
+      //add mouse/touch controls
+      this.input.onDown.add(this.bird.flap, this.bird);
+
+      /////////////////// ADD OBSTACLES //////////////////////////
+          //this.pipe = new Pipe(this.game, 200, 0, 335, 112);
+          //this.game.add.existing(this.pipe);
+      // we will delete this code and replace it with the timer generated obstacles
+      this.pipeGenerator = this.game.time.events.loop(Phaser.Timer.SECOND * 1.25, this.generatePipes, this);
+      this.pipeGenerator.timer.start();
+
+
+
     },
     update: function() {
       this.game.physics.arcade.collide(this.bird, this.ground);
 
+    },
+
+    generatePipes: function() {
+      var pipeY = this.game.rnd.integerInRange(-100, 100);
+      var pipeGroup = new PipeGroup(this.game);
+      pipeGroup.x = this.game.width;
+      pipeGroup.y = pipeY;
+
+
+      console.log('generating pipes!');
     },
     clickListener: function() {
       this.game.state.start('gameover');
@@ -240,7 +346,7 @@ module.exports = Menu;
   //  this.game.add.existing(bird);
   //  birdGroup.add(bird);
 
-},{"../prefabs/bird":2,"../prefabs/ground":3}],8:[function(require,module,exports){
+},{"../prefabs/bird":2,"../prefabs/ground":3,"../prefabs/pipe":4,"../prefabs/pipeGroup":5}],10:[function(require,module,exports){
 
 'use strict';
 function Preload() {
@@ -267,6 +373,8 @@ Preload.prototype = {
     // the width is 34 px the height is 24 px and we want to have 3 different
     //animations for the bird
     this.load.spritesheet('bird', 'assets/bird.png', 34,24,3);
+    this.load.spritesheet('pipe', 'assets/pipes.png', 54,320,2);
+
 
 
   },

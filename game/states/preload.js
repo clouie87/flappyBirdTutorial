@@ -24,6 +24,8 @@ Preload.prototype = {
     // the width is 34 px the height is 24 px and we want to have 3 different
     //animations for the bird
     this.load.spritesheet('bird', 'assets/bird.png', 34,24,3);
+    this.load.spritesheet('pipe', 'assets/pipes.png', 54,320,2);
+
 
 
   },

@@ -3,6 +3,8 @@
 
   var Bird = require('../prefabs/bird');
   var Ground = require('../prefabs/ground');
+  var PipeGroup = require('../prefabs/pipeGroup');
+  var Pipe = require('../prefabs/pipe');
 
   function Play() {}
   Play.prototype = {
@@ -10,7 +12,7 @@
 
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
       //initiates the physics sysytem in our game
-      this.game.physics.arcade.gravity.y = 500;
+      this.game.physics.arcade.gravity.y = 1200;
       // set the gravity to be max rate of 500px/sec
 
       ////////////////////ADD BACKGROUND //////////////////////
@@ -27,10 +29,41 @@
       this.ground = new Ground(this.game, 0, 400, 335, 112);
       this.game.add.existing(this.ground);
 
+      ////////////////// CREATE THE FLAPPING ///////////////////
+      //keep the spacebar from propogating up to the browser
+      //by default our spacebar scrolls the page down. we want to override this
+      this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
+
+      //add keyboard controls
+      var flapKey = this.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+      flapKey.onDown.add(this.bird.flap, this.bird);
+
+      //add mouse/touch controls
+      this.input.onDown.add(this.bird.flap, this.bird);
+
+      /////////////////// ADD OBSTACLES //////////////////////////
+          //this.pipe = new Pipe(this.game, 200, 0, 335, 112);
+          //this.game.add.existing(this.pipe);
+      // we will delete this code and replace it with the timer generated obstacles
+      this.pipeGenerator = this.game.time.events.loop(Phaser.Timer.SECOND * 1.25, this.generatePipes, this);
+      this.pipeGenerator.timer.start();
+
+
+
     },
     update: function() {
       this.game.physics.arcade.collide(this.bird, this.ground);
 
+    },
+
+    generatePipes: function() {
+      var pipeY = this.game.rnd.integerInRange(-100, 100);
+      var pipeGroup = new PipeGroup(this.game);
+      pipeGroup.x = this.game.width;
+      pipeGroup.y = pipeY;
+
+
+      console.log('generating pipes!');
     },
     clickListener: function() {
       this.game.state.start('gameover');
