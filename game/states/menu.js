@@ -7,6 +7,7 @@ Menu.prototype = {
 
   },
   create: function() {
+    ////////////////////// BACKGROUND ////////////////////////////
     //we want to create/load our background image
     this.background = this.game.add.sprite(0,0, 'background');
     //we want to add a ground that is constantly moving. one way to do that is
@@ -15,6 +16,7 @@ Menu.prototype = {
     this.ground= this.game.add.tileSprite(0, 400, 355, 112, 'ground');
     this.ground.autoScroll(-200, 0);
 
+    ///////////////////// TITLE ///////////////////////////////////
     //Step 1 create a group we can put the title and bird into and
     //manipulate together
     this.titleGroup= this.game.add.group();
@@ -32,11 +34,18 @@ Menu.prototype = {
     this.bird.animations.play('flap', 12, true);
     //Step 5 set the originating location fo the group
     this.titleGroup.x = 30;
-    this.titleGroup.y = 0;
+    this.titleGroup.y = 100;
     //Step 6 create an oscilating animation tween for the group
-    this.game.add.tween(this.titleGroup).to({y:15}, 350, Phaser.Easing.Linear.NONE, true, 0, 1000, true);
+    this.game.add.tween(this.titleGroup).to({y:115}, 350, Phaser.Easing.Linear.NONE, true, 0, 1000, true);
 
+    //////////////////////////////// START BUTTON ////////////////////////////
+    this.startButton = this.game.add.button(this.game.width/2, 300, 'startButton', this.startClick, this);
+    this.startButton.anchor.setTo(0.5, 0.5);
 
+  },
+
+  startClick: function(){
+    this.game.state.start('play');
   },
   update: function() {
   }
