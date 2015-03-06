@@ -110,7 +110,7 @@ var Pipe = function(game, x, y, frame) {
   this.body.allowGravity = false;
   this.body.immovable = true;
 
-  this.body.velocity.x = -200;
+  //this.body.velocity.x = -200;
 
 
   // initialize your prefab here
@@ -144,12 +144,43 @@ var PipeGroup = function(game, parent) {
 
   this.hasScored=false;
 
+  this.setAll('body.velocity.x', -200);
+
 };
 
 PipeGroup.prototype = Object.create(Phaser.Group.prototype);
 PipeGroup.prototype.constructor = PipeGroup;
 
+PipeGroup.prototype.reset = function(x, y) {
+
+  // Step 1
+  this.topPipe.reset(0,0);
+
+  // Step 2
+  this.bottomPipe.reset(0,440); // Step 2
+
+  // Step 3
+  this.x = x;
+  this.y = y;
+
+  // Step 4
+  this.setAll('body.velocity.x', -200);
+
+  // Step 5
+  this.hasScored = false;
+
+  // Step 6
+  this.exists = true;
+};
+
+PipeGroup.prototype.checkWorldBounds = function() {
+  if(!this.topPipe.inWorld) {
+    this.exists = false;
+  }
+};
+
 PipeGroup.prototype.update = function() {
+  this.checkWorldBounds();
 
   // write your prefab's specific update code here
 
@@ -289,6 +320,9 @@ module.exports = Menu;
       //add it to the game
       this.game.add.existing(this.bird);
 
+      ////////// CREATE PIPES GROUP FOR PIPEGROUP PREFABS ////////
+      this.pipes = this.game.add.group();
+
       /////////////// CREATE AND ADD GROUND OBJECT//////////////
       this.ground = new Ground(this.game, 0, 400, 335, 112);
       this.game.add.existing(this.ground);
@@ -318,19 +352,37 @@ module.exports = Menu;
     update: function() {
       this.game.physics.arcade.collide(this.bird, this.ground);
 
-    },
+      // enable collisions between the bird and each group in the pipes group
+      this.pipes.forEach(function(pipeGroup) {
+        this.game.physics.arcade.collide(this.bird, pipeGroup, this.deathHandler, null, this);
+      }, this);
 
+    },
     generatePipes: function() {
-      var pipeY = this.game.rnd.integerInRange(-100, 100);
-      var pipeGroup = new PipeGroup(this.game);
-      pipeGroup.x = this.game.width;
-      pipeGroup.y = pipeY;
-
-
       console.log('generating pipes!');
+      var pipeY = this.game.rnd.integerInRange(-100, 100);
+      var pipeGroup = this.pipes.getFirstExists(false);
+      if(!pipeGroup) {
+        pipeGroup = new PipeGroup(this.game, this.pipes);
+      }
+      pipeGroup.reset(this.game.width, pipeY);
+
     },
+
+    deathHandler: function() {
+      this.game.state.start('gameover')
+    },
+
+
+
     clickListener: function() {
       this.game.state.start('gameover');
+    },
+
+    shutdown: function() {
+      this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+      this.bird.destroy();
+      this.pipes.destroy();
     }
   };
 

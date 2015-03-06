@@ -25,6 +25,9 @@
       //add it to the game
       this.game.add.existing(this.bird);
 
+      ////////// CREATE PIPES GROUP FOR PIPEGROUP PREFABS ////////
+      this.pipes = this.game.add.group();
+
       /////////////// CREATE AND ADD GROUND OBJECT//////////////
       this.ground = new Ground(this.game, 0, 400, 335, 112);
       this.game.add.existing(this.ground);
@@ -54,19 +57,37 @@
     update: function() {
       this.game.physics.arcade.collide(this.bird, this.ground);
 
-    },
+      // enable collisions between the bird and each group in the pipes group
+      this.pipes.forEach(function(pipeGroup) {
+        this.game.physics.arcade.collide(this.bird, pipeGroup, this.deathHandler, null, this);
+      }, this);
 
+    },
     generatePipes: function() {
-      var pipeY = this.game.rnd.integerInRange(-100, 100);
-      var pipeGroup = new PipeGroup(this.game);
-      pipeGroup.x = this.game.width;
-      pipeGroup.y = pipeY;
-
-
       console.log('generating pipes!');
+      var pipeY = this.game.rnd.integerInRange(-100, 100);
+      var pipeGroup = this.pipes.getFirstExists(false);
+      if(!pipeGroup) {
+        pipeGroup = new PipeGroup(this.game, this.pipes);
+      }
+      pipeGroup.reset(this.game.width, pipeY);
+
     },
+
+    deathHandler: function() {
+      this.game.state.start('gameover')
+    },
+
+
+
     clickListener: function() {
       this.game.state.start('gameover');
+    },
+
+    shutdown: function() {
+      this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+      this.bird.destroy();
+      this.pipes.destroy();
     }
   };
 

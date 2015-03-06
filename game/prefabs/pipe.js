@@ -8,7 +8,7 @@ var Pipe = function(game, x, y, frame) {
   this.body.allowGravity = false;
   this.body.immovable = true;
 
-  this.body.velocity.x = -200;
+  //this.body.velocity.x = -200;
 
 
   // initialize your prefab here
